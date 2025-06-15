@@ -9,8 +9,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     # broker settings
     BROKER_URL: str
-    BROKER_MAIL_ROUTING_KEY: str
-    BROKER_CALLBACK_ROUTING_KEY: str
+    BROKER_MAIL_TOPIC: str
+    BROKER_MAIL_CALLBACK_TOPIC: str
+    BROKER_GROUP_ID: str
 
     # email settings
     MAIL_USERNAME: str
