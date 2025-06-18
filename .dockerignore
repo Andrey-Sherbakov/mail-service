@@ -1,0 +1,11 @@
+.venv
+.idea
+.git
+.gitignore
+__pycache__/
+*.log
+README.md
+LICENSE
+.dockerignore
+Dockerfile
+docker-compose.yml
