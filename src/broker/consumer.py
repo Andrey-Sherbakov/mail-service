@@ -1,10 +1,15 @@
 import asyncio
 import json
-import traceback
 from dataclasses import dataclass
 from typing import Callable, Awaitable
 
-from aiokafka import AIOKafkaConsumer
+import aio_pika
+from aio_pika.abc import (
+    AbstractIncomingMessage,
+    AbstractRobustConnection,
+    AbstractRobustChannel,
+    AbstractQueue,
+)
 
 from src.config import Settings
 
@@ -12,35 +17,32 @@ from src.config import Settings
 @dataclass
 class BrokerConsumer:
     settings: Settings
-    message_handler: Callable[[dict], Awaitable[None]]
-    _consumer: AIOKafkaConsumer | None = None
-    _consumer_task: asyncio.Task | None = None
+    message_handler: Callable[[AbstractIncomingMessage], Awaitable[None]] | None = None
+    _connection: AbstractRobustConnection | None = None
+    _channel: AbstractRobustChannel | None = None
+    _queue: AbstractQueue | None = None
 
-    async def start(self) -> None:
-        self._consumer = AIOKafkaConsumer(
-            self.settings.BROKER_MAIL_TOPIC,
-            bootstrap_servers=self.settings.BROKER_URL,
-            group_id=self.settings.BROKER_GROUP_ID,
-            value_deserializer=lambda v: json.loads(v.decode("utf-8")),
+    async def start(self):
+        self._connection = await aio_pika.connect_robust(self.settings.BROKER_URL)
+        self._channel = await self._connection.channel()
+        self._queue = await self._channel.declare_queue(
+            self.settings.BROKER_MAIL_TOPIC, durable=True
         )
-        await self._consumer.start()
-        self._consumer_task = asyncio.create_task(self._consume_loop())
-        self._consumer_task.add_done_callback(self._handle_task_exception)
 
-    async def stop(self) -> None:
-        if self._consumer_task:
-            self._consumer_task.cancel()
-        if self._consumer:
-            await self._consumer.stop()
+    async def stop(self):
+        await self._channel.close()
+        await self._connection.close()
 
-    async def _consume_loop(self) -> None:
-        try:
-            async for message in self._consumer:
-                await self.message_handler(message.value)
-        except asyncio.CancelledError:
-            pass
+    async def consume(self):
+        handler = self.default_message_handler
+        if self.message_handler:
+            handler = self.message_handler
+
+        await self._queue.consume(handler)
 
     @staticmethod
-    def _handle_task_exception(task: asyncio.Task):
-        if task.exception():
-            raise task.exception()
+    async def default_message_handler(message: AbstractIncomingMessage):
+        async with message.process():
+            body = message.body.decode()
+            correlation_id = message.correlation_id
+            print(body, correlation_id)

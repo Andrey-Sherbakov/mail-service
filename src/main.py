@@ -22,6 +22,7 @@ async def lifespan(app: FastAPI):
     )
     app.state.broker_consumer = broker_consumer
     await broker_consumer.start()
+    await broker_consumer.consume()
 
     yield
 

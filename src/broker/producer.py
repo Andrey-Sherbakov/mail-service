@@ -1,7 +1,14 @@
 import json
+import uuid
 from dataclasses import dataclass
 
-from aiokafka import AIOKafkaProducer
+import aio_pika
+from aio_pika.abc import (
+    AbstractRobustConnection,
+    AbstractRobustChannel,
+    AbstractQueue,
+    AbstractMessage,
+)
 
 from src.config import Settings
 
@@ -9,18 +16,22 @@ from src.config import Settings
 @dataclass
 class BrokerProducer:
     settings: Settings
-    _producer: AIOKafkaProducer | None = None
+    _connection: AbstractRobustConnection | None = None
+    _channel: AbstractRobustChannel | None = None
+    _queue: AbstractQueue | None = None
 
-    async def send_mail(self, message: dict) -> None:
-        await self._producer.send_and_wait(self.settings.BROKER_MAIL_CALLBACK_TOPIC, message)
-
-    async def start(self) -> None:
-        self._producer = AIOKafkaProducer(
-            bootstrap_servers=self.settings.BROKER_URL,
-            value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+    async def publish(self, message: AbstractMessage):
+        await self._channel.default_exchange.publish(
+            message=message, routing_key=self.settings.BROKER_MAIL_CALLBACK_TOPIC
         )
-        await self._producer.start()
 
-    async def stop(self) -> None:
-        if self._producer:
-            await self._producer.stop()
+    async def start(self):
+        self._connection = await aio_pika.connect_robust(self.settings.BROKER_URL)
+        self._channel = await self._connection.channel()
+        self._queue = await self._channel.declare_queue(
+            self.settings.BROKER_MAIL_CALLBACK_TOPIC, durable=True
+        )
+
+    async def stop(self):
+        await self._channel.close()
+        await self._connection.close()
