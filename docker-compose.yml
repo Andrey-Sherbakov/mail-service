@@ -6,7 +6,6 @@ services:
     command: [ "uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000" ]
     environment:
       - ENVIRONMENT=DEV
-      - BROKER_URL=kafka:29092
     ports:
       - "8001:8000"
     networks:

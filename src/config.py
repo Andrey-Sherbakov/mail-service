@@ -5,6 +5,8 @@ from fastapi_mail import ConnectionConfig
 from pydantic import SecretStr, EmailStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from src.logger import logger
+
 
 class Settings(BaseSettings):
     # broker settings
@@ -42,4 +44,5 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     environment = os.environ.get("ENVIRONMENT", "dev")
     env_file = f".{environment.lower()}.env"
+    logger.debug(f"Using env file: {env_file}")
     return Settings(_env_file=env_file)

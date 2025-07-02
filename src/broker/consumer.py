@@ -1,5 +1,3 @@
-import asyncio
-import json
 from dataclasses import dataclass
 from typing import Callable, Awaitable
 
@@ -12,6 +10,7 @@ from aio_pika.abc import (
 )
 
 from src.config import Settings
+from src.logger import logger
 
 
 @dataclass
@@ -28,10 +27,12 @@ class BrokerConsumer:
         self._queue = await self._channel.declare_queue(
             self.settings.BROKER_MAIL_TOPIC, durable=True
         )
+        logger.debug("Broker consumer started")
 
     async def stop(self):
         await self._channel.close()
         await self._connection.close()
+        logger.debug("Broker consumer stopped")
 
     async def consume(self):
         handler = self.default_message_handler
@@ -39,10 +40,13 @@ class BrokerConsumer:
             handler = self.message_handler
 
         await self._queue.consume(handler)
+        logger.debug("Broker cunsuming ...")
 
     @staticmethod
     async def default_message_handler(message: AbstractIncomingMessage):
         async with message.process():
             body = message.body.decode()
             correlation_id = message.correlation_id
-            print(body, correlation_id)
+            logger.info(
+                f"Message recieved: body={body}, correlation_id={correlation_id}"
+            )
