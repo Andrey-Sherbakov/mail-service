@@ -8,6 +8,7 @@ from aio_pika.abc import (
     AbstractRobustChannel,
     AbstractQueue,
 )
+from fastapi import FastAPI
 
 from src.config import Settings
 from src.logger import logger
@@ -16,16 +17,21 @@ from src.logger import logger
 @dataclass
 class BrokerConsumer:
     settings: Settings
-    message_handler: Callable[[AbstractIncomingMessage], Awaitable[None]] | None = None
+    mail_handler: Callable[[AbstractIncomingMessage], Awaitable[None]] | None = None
+    tg_handler: Callable[[AbstractIncomingMessage], Awaitable[None]] | None = None
     _connection: AbstractRobustConnection | None = None
     _channel: AbstractRobustChannel | None = None
-    _queue: AbstractQueue | None = None
+    _mail_queue: AbstractQueue | None = None
+    _tg_queue: AbstractQueue | None = None
 
     async def start(self):
         self._connection = await aio_pika.connect_robust(self.settings.BROKER_URL)
         self._channel = await self._connection.channel()
-        self._queue = await self._channel.declare_queue(
+        self._mail_queue = await self._channel.declare_queue(
             self.settings.BROKER_MAIL_TOPIC, durable=True
+        )
+        self._tg_queue = await self._channel.declare_queue(
+            self.settings.BROKER_TG_TOPIC, durable=True
         )
         logger.debug("Broker consumer started")
 
@@ -35,11 +41,8 @@ class BrokerConsumer:
         logger.debug("Broker consumer stopped")
 
     async def consume(self):
-        handler = self.default_message_handler
-        if self.message_handler:
-            handler = self.message_handler
-
-        await self._queue.consume(handler)
+        await self._mail_queue.consume(self.mail_handler)
+        await self._tg_queue.consume(self.tg_handler)
         logger.debug("Broker cunsuming ...")
 
     @staticmethod
@@ -50,3 +53,18 @@ class BrokerConsumer:
             logger.info(
                 f"Message recieved: body={body}, correlation_id={correlation_id}"
             )
+
+
+async def consumer_startup(app: FastAPI, settings: Settings):
+    broker_consumer = BrokerConsumer(
+        settings=settings,
+        mail_handler=app.state.mail_service.consume_message,
+        tg_handler=app.state.bot.broker_message_handler,
+    )
+    app.state.broker_consumer = broker_consumer
+    await broker_consumer.start()
+    await broker_consumer.consume()
+
+
+async def consumer_shutdown(app: FastAPI):
+    await app.state.broker_consumer.stop()

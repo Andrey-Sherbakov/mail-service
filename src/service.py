@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 import aio_pika
 from aio_pika.abc import AbstractIncomingMessage
+from fastapi import FastAPI
 from fastapi_mail import MessageSchema, FastMail
 
 from src.broker.producer import BrokerProducer
@@ -22,48 +23,47 @@ class MailService:
             correlation_id = message.correlation_id
 
             try:
-                await self.send_email(email_body=email_body)
-                await self.send_success_callback(
+                await self.send_email(
                     email_body=email_body, correlation_id=correlation_id
                 )
+                await self.send_success_callback(correlation_id=correlation_id)
             except Exception as e:
                 logger.error(
-                    f"Failed to send email: subject={email_body.subject}, to={email_body.recipients}, exception={e}"
+                    f"Failed to send email: subject={email_body.subject}, "
+                    f"to={email_body.recipients}, exception={e}, correlation_id={correlation_id}"
                 )
                 await self.send_fail_callback(
-                    email_body=email_body,
                     correlation_id=correlation_id,
                     exception=e,
                 )
 
-    async def send_success_callback(
-        self, email_body: EmailBody, correlation_id: str
-    ) -> None:
+    async def send_success_callback(self, correlation_id: str) -> None:
         message = aio_pika.Message(
-            body=f"Email send successfully: subject={email_body.subject} to={email_body.recipients}".encode(),
+            body="Email send successfully".encode(),
             correlation_id=correlation_id,
         )
         await self.broker_producer.publish(message=message)
 
     async def send_fail_callback(
-        self, email_body: EmailBody, correlation_id: str, exception: Exception
+        self, correlation_id: str, exception: Exception
     ) -> None:
         message = aio_pika.Message(
-            body=f"Failed to send email: subject={email_body.subject}, to={email_body.recipients}, exception={exception}".encode(),
+            body=f"Failed to send email with exception={exception}".encode(),
             correlation_id=correlation_id,
         )
         await self.broker_producer.publish(message=message)
 
-    async def send_email(self, email_body: EmailBody) -> None:
+    async def send_email(self, email_body: EmailBody, correlation_id: str) -> None:
         message = MessageSchema(**email_body.model_dump())
-        fm = FastMail(self.settings.MAIL_CONFIG)
-        await fm.send_message(message=message)
+        # fm = FastMail(self.settings.MAIL_CONFIG)
+        # await fm.send_message(message=message)
         logger.info(
-            f"Email send: subject={email_body.subject}, to={email_body.recipients}"
+            f"Email send: subject={email_body.subject}, to={email_body.recipients}, "
+            f"correlation_id={correlation_id}"
         )
 
 
-async def get_mail_service(
-    settings: Settings, broker_producer: BrokerProducer
-) -> MailService:
-    return MailService(settings=settings, broker_producer=broker_producer)
+async def setup_mail_service(app: FastAPI) -> MailService:
+    app.state.mail_service = MailService(
+        settings=app.state.settings, broker_producer=app.state.broker_producer
+    )

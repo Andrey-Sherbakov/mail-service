@@ -12,7 +12,13 @@ class Settings(BaseSettings):
     # broker settings
     BROKER_URL: str
     BROKER_MAIL_TOPIC: str
-    BROKER_MAIL_CALLBACK_TOPIC: str
+    BROKER_TG_TOPIC: str
+    BROKER_CALLBACK_TOPIC: str
+
+    # telegram bot settings
+    BOT_TOKEN: str
+    BOT_NAME: str
+    CHAT_ID: int
 
     # email settings
     MAIL_USERNAME: str
