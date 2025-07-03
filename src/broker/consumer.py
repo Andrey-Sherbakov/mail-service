@@ -50,14 +50,12 @@ class BrokerConsumer:
         async with message.process():
             body = message.body.decode()
             correlation_id = message.correlation_id
-            logger.info(
-                f"Message recieved: body={body}, correlation_id={correlation_id}"
-            )
+            logger.info(f"Message recieved: body={body}, correlation_id={correlation_id}")
 
 
-async def consumer_startup(app: FastAPI, settings: Settings):
+async def consumer_startup(app: FastAPI):
     broker_consumer = BrokerConsumer(
-        settings=settings,
+        settings=app.state.settings,
         mail_handler=app.state.mail_service.consume_message,
         tg_handler=app.state.bot.broker_message_handler,
     )

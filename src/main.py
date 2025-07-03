@@ -11,12 +11,12 @@ from src.telegram_bot import TelegramBot, bot_startup, bot_shutdown
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    settings = get_settings()
+    app.state.settings = get_settings()
 
-    await producer_startup(app=app, settings=settings)
-    await setup_mail_service(app=app, settings=settings)
-    await bot_startup(app, settings)
-    await consumer_startup(app=app, settings=settings)
+    await producer_startup(app=app)
+    await setup_mail_service(app=app)
+    await bot_startup(app=app)
+    await consumer_startup(app=app)
 
     yield
 

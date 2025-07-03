@@ -18,18 +18,14 @@ dp = Dispatcher()
 
 @dp.message(Command("start"))
 async def handle_start(message: Message):
-    await message.answer(
-        text=f"Welcome to alarm bot!\nYour chat id is {message.chat.id}"
-    )
+    await message.answer(text=f"Welcome to alarm bot!\nYour chat id is {message.chat.id}")
     logger.info(f"Start message handled: from={message.from_user.username}")
 
 
 @dp.message()
 async def handle_message(message: Message):
     await message.answer(text="I dont want to talk with you ...")
-    logger.info(
-        f"Message handled: message='{message.text}', from={message.from_user.username}"
-    )
+    logger.info(f"Message handled: message='{message.text}', from={message.from_user.username}")
 
 
 @dataclass
@@ -77,8 +73,8 @@ class TelegramBot:
         await self.dp.start_polling(self._bot)
 
 
-async def bot_startup(app: FastAPI, settings: Settings):
-    bot = TelegramBot(settings=settings, dp=dp, producer=app.state.broker_producer)
+async def bot_startup(app: FastAPI):
+    bot = TelegramBot(settings=app.state.settings, dp=dp, producer=app.state.broker_producer)
     await bot.start()
     app.state.bot = bot
 

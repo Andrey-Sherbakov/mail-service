@@ -23,9 +23,7 @@ class MailService:
             correlation_id = message.correlation_id
 
             try:
-                await self.send_email(
-                    email_body=email_body, correlation_id=correlation_id
-                )
+                await self.send_email(email_body=email_body, correlation_id=correlation_id)
                 await self.send_success_callback(correlation_id=correlation_id)
             except Exception as e:
                 logger.error(
@@ -44,9 +42,7 @@ class MailService:
         )
         await self.broker_producer.publish(message=message)
 
-    async def send_fail_callback(
-        self, correlation_id: str, exception: Exception
-    ) -> None:
+    async def send_fail_callback(self, correlation_id: str, exception: Exception) -> None:
         message = aio_pika.Message(
             body=f"Failed to send email with exception={exception}".encode(),
             correlation_id=correlation_id,
@@ -63,7 +59,7 @@ class MailService:
         )
 
 
-async def setup_mail_service(app: FastAPI) -> MailService:
+async def setup_mail_service(app: FastAPI):
     app.state.mail_service = MailService(
         settings=app.state.settings, broker_producer=app.state.broker_producer
     )

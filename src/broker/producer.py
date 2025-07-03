@@ -40,8 +40,8 @@ class BrokerProducer:
         logger.debug("Broker producer stopped")
 
 
-async def producer_startup(app: FastAPI, settings: Settings):
-    broker_producer = BrokerProducer(settings=settings)
+async def producer_startup(app: FastAPI):
+    broker_producer = BrokerProducer(settings=app.state.settings)
     app.state.broker_producer = broker_producer
     await broker_producer.start()
 
