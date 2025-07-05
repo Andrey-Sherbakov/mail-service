@@ -9,7 +9,7 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      - ./logs:/mail-service/logs
+      - ../logs:/logs
     networks:
       - pomodoro-net
 

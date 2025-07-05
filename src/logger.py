@@ -4,8 +4,8 @@ from pathlib import Path
 from loguru import logger
 
 
-log_path = Path(__file__).resolve().parent.parent / "logs"
-log_path.mkdir(exist_ok=True)
+log_path = Path(__file__).resolve().parent.parent.parent / "logs" / "mail-service"
+log_path.mkdir(exist_ok=True, parents=True)
 
 logger.remove()
 
