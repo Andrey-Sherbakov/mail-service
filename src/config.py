@@ -2,7 +2,7 @@ import os
 from functools import lru_cache
 
 from fastapi_mail import ConnectionConfig
-from pydantic import SecretStr, EmailStr
+from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from src.logger import logger

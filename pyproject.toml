@@ -16,8 +16,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "black>=25.1.0",
+    "ruff>=0.12.2",
 ]
 
-[tool.black]
+[tool.ruff]
 line-length = 100
