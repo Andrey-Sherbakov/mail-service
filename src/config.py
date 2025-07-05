@@ -5,12 +5,20 @@ from fastapi_mail import ConnectionConfig
 from pydantic import SecretStr, EmailStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from src.logger import logger
+
 
 class Settings(BaseSettings):
     # broker settings
     BROKER_URL: str
     BROKER_MAIL_TOPIC: str
-    BROKER_MAIL_CALLBACK_TOPIC: str
+    BROKER_TG_TOPIC: str
+    BROKER_CALLBACK_TOPIC: str
+
+    # telegram bot settings
+    BOT_TOKEN: str
+    BOT_NAME: str
+    CHAT_ID: int
 
     # email settings
     MAIL_USERNAME: str
@@ -42,4 +50,5 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     environment = os.environ.get("ENVIRONMENT", "dev")
     env_file = f".{environment.lower()}.env"
+    logger.debug(f"Using env file: {env_file}")
     return Settings(_env_file=env_file)

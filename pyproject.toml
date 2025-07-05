@@ -5,8 +5,10 @@ description = "Add your description here"
 requires-python = ">=3.13"
 dependencies = [
     "aio-pika>=9.5.5",
+    "aiogram>=3.20.0.post0",
     "fastapi>=0.115.12",
     "fastapi-mail>=1.5.0",
+    "loguru>=0.7.3",
     "pydantic-settings>=2.9.1",
     "pydantic[email]>=2.11.5",
     "uvicorn>=0.34.3",
