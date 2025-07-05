@@ -24,8 +24,8 @@ dp = Dispatcher(storage=MemoryStorage())
 @dp.message(Command("start"))
 async def handle_start(message: Message):
     await message.answer(
-        text=f"Welcome to alarm bot!\nYour chat id is {message.chat.id}\n"
-        f"Available commands:\n/start\n/logs"
+        text=f"Welcome to alarm bot!\nYour chat id is\n - {message.chat.id}\n"
+        f"Available commands:\n - /start\n - /logs"
     )
     logger.info(f"Start message handled: from={message.from_user.username}")
 
@@ -57,6 +57,8 @@ async def log_level_entered(message: Message, state: FSMContext):
         or log_name_level[1] not in ["1", "2", "3"]
     ):
         await message.answer("Неверные входные данные!")
+        await state.clear()
+        return
 
     app_name = name_map.get(log_name_level[0], name_map["1"])
     log_level = level_map.get(log_name_level[1], level_map["2"])
@@ -99,8 +101,8 @@ async def log_level_entered(message: Message, state: FSMContext):
 async def handle_message(message: Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is None:
-        await message.answer(text="I dont want to talk with you ...")
-        logger.info("Available commands:\n/start\n/logs")
+        await message.answer(text="Available commands:\n - /start\n - /logs")
+        logger.info(f"Message handled: message='{message.text}', from={message.from_user.username}")
     else:
         logger.warning("Default message handler with active state!")
 
