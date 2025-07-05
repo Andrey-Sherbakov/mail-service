@@ -44,6 +44,9 @@ async def cmd_logs(message: Message, state: FSMContext):
 
 @dp.message(LogQuery.waiting_for_app_name_and_level)
 async def log_level_entered(message: Message, state: FSMContext):
+    name_map = {"1": "pomodoro-time", "2": "mail-service"}
+    level_map = {"1": "debug", "2": "info", "3": "warning"}
+
     log_name_level = message.text.strip().split()
     if (
         len(log_name_level) != 2
@@ -52,10 +55,8 @@ async def log_level_entered(message: Message, state: FSMContext):
     ):
         await message.answer("Неверные входные данные!")
 
-    app_name = "pomodoro-time" if log_name_level[0] == "1" else "mail-service"
-    log_level = (
-        "debug" if log_name_level[0] == "1" else "info" if log_name_level[0] == "2" else "warning"
-    )
+    app_name = name_map.get(log_name_level[0], name_map["1"])
+    log_level = level_map.get(log_name_level[1], level_map["2"])
 
     file_path = f"../logs/{app_name}/{log_level}.log"
 
