@@ -1,4 +1,5 @@
 import asyncio
+from collections import deque
 from dataclasses import dataclass
 
 from aio_pika import Message as BrokerMessage
@@ -24,11 +25,20 @@ async def handle_start(message: Message):
 
 @dp.message(Command("logs"))
 async def handle_logs(message: Message):
-    with open("../../pomodoro-time/logs/app.log", "r", encoding="utf-8") as f:
-        line = f.readline()
-        logger.info(line)
+    with open("../pomodoro-time/logs/app.log", "r", encoding="utf-8") as f:
+        last_lines = list(deque(f, maxlen=20))
+        response = "".join(last_lines)
 
-    await message.answer(text="Last logs from pomodoro-time")
+    await message.answer(text="Last logs from pomodoro-time:\n\n" + response)
+
+
+@dp.message(Command("logs-self"))
+async def handle_self_logs(message: Message):
+    with open("./logs/info.log", "r", encoding="utf-8") as f:
+        last_lines = list(deque(f, maxlen=20))
+        response = "".join(last_lines)
+
+    await message.answer(text="Last logs from mail-service:\n\n" + response)
 
 
 @dp.message()

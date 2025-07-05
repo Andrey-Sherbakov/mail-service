@@ -8,6 +8,8 @@ services:
       - ENVIRONMENT=DEV
     ports:
       - "8001:8000"
+    volumes:
+      - ./logs:/mail-service/logs
     networks:
       - pomodoro-net
 
