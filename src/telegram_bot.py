@@ -22,6 +22,15 @@ async def handle_start(message: Message):
     logger.info(f"Start message handled: from={message.from_user.username}")
 
 
+@dp.message(Command("logs"))
+async def handle_logs(message: Message):
+    with open("../../pomodoro-time/logs/app.log", "r", encoding="utf-8") as f:
+        line = f.readline()
+        logger.info(line)
+
+    await message.answer(text="Last logs from pomodoro-time")
+
+
 @dp.message()
 async def handle_message(message: Message):
     await message.answer(text="I dont want to talk with you ...")
