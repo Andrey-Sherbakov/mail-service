@@ -51,8 +51,8 @@ class MailService:
 
     async def send_email(self, email_body: EmailBody, correlation_id: str) -> None:
         message = MessageSchema(**email_body.model_dump())
-        # fm = FastMail(self.settings.MAIL_CONFIG)
-        # await fm.send_message(message=message)
+        fm = FastMail(self.settings.MAIL_CONFIG)
+        await fm.send_message(message=message)
         logger.info(
             f"Email send: subject={email_body.subject}, to={email_body.recipients}, "
             f"correlation_id={correlation_id}"
