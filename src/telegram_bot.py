@@ -1,10 +1,14 @@
 import asyncio
+import os
 from collections import deque
 from dataclasses import dataclass
 
 from aio_pika import Message as BrokerMessage
 from aio_pika.abc import AbstractIncomingMessage
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import Message
 from aiogram.filters import Command
 from fastapi import FastAPI
@@ -14,7 +18,7 @@ from src.config import Settings
 from src.logger import logger
 
 
-dp = Dispatcher()
+dp = Dispatcher(storage=MemoryStorage())
 
 
 @dp.message(Command("start"))
@@ -23,28 +27,78 @@ async def handle_start(message: Message):
     logger.info(f"Start message handled: from={message.from_user.username}")
 
 
+#### эксперимент
+class LogQuery(StatesGroup):
+    waiting_for_app_name_and_level = State()
+
+
 @dp.message(Command("logs"))
-async def handle_logs(message: Message):
-    with open("../logs/pomodoro-time/info.log", "r", encoding="utf-8") as f:
-        last_lines = list(deque(f, maxlen=20))
-        response = "".join(last_lines)
+async def cmd_logs(message: Message, state: FSMContext):
+    await message.answer(
+        "Приложение для логов:\n1)pomodoro-time\n2)mail-service\n"
+        "Уровень логирования:\n1)debug\n2)info\n3)warning\n"
+        "Данные введите через пробел:"
+    )
+    await state.set_state(LogQuery.waiting_for_app_name_and_level)
 
-    await message.answer(text="Last logs from pomodoro-time:\n\n" + response)
+
+@dp.message(LogQuery.waiting_for_app_name_and_level)
+async def log_level_entered(message: Message, state: FSMContext):
+    log_name_level = message.text.strip().split()
+    if (
+        len(log_name_level) != 2
+        or log_name_level[0] not in ["1", "2"]
+        or log_name_level[1] not in ["1", "2", "3"]
+    ):
+        await message.answer("Неверные входные данные!")
+
+    app_name = "pomodoro-time" if log_name_level[0] == "1" else "mail-service"
+    log_level = (
+        "debug" if log_name_level[0] == "1" else "info" if log_name_level[0] == "2" else "warning"
+    )
+
+    file_path = f"../logs/{app_name}/{log_level}.log"
+
+    if not os.path.isfile(file_path):
+        await message.answer(f"Файл логов не найден по пути: {file_path}")
+    else:
+        with open(file_path, "r", encoding="utf-8") as f:
+            last_lines = list(deque(f, maxlen=20))
+            response = "".join(last_lines)
+            await message.answer(
+                text=f"Последние логи из `{app_name}` уровня `{log_level}`:\n\n{response}"
+            )
+
+    await state.clear()
 
 
-@dp.message(Command("logs-self"))
-async def handle_self_logs(message: Message):
-    with open("../logs/mail-service/info.log", "r", encoding="utf-8") as f:
-        last_lines = list(deque(f, maxlen=20))
-        response = "".join(last_lines)
-
-    await message.answer(text="Last logs from mail-service:\n\n" + response)
+######
+# @dp.message(Command("logs"))
+# async def handle_logs(message: Message):
+#     with open("../logs/pomodoro-time/info.log", "r", encoding="utf-8") as f:
+#         last_lines = list(deque(f, maxlen=20))
+#         response = "".join(last_lines)
+#
+#     await message.answer(text="Last logs from pomodoro-time:\n\n" + response)
+#
+#
+# @dp.message(Command("logs-self"))
+# async def handle_self_logs(message: Message):
+#     with open("../logs/mail-service/info.log", "r", encoding="utf-8") as f:
+#         last_lines = list(deque(f, maxlen=20))
+#         response = "".join(last_lines)
+#
+#     await message.answer(text="Last logs from mail-service:\n\n" + response)
 
 
 @dp.message()
-async def handle_message(message: Message):
-    await message.answer(text="I dont want to talk with you ...")
-    logger.info(f"Message handled: message='{message.text}', from={message.from_user.username}")
+async def handle_message(message: Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state is None:
+        await message.answer(text="I dont want to talk with you ...")
+        logger.info(f"Message handled: message='{message.text}', from={message.from_user.username}")
+    else:
+        logger.warning("Default message handler with active state!")
 
 
 @dataclass
