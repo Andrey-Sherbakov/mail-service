@@ -25,7 +25,7 @@ async def handle_start(message: Message):
 
 @dp.message(Command("logs"))
 async def handle_logs(message: Message):
-    with open("../pomodoro-time/logs/info.log", "r", encoding="utf-8") as f:
+    with open("../logs/pomodoro-time/info.log", "r", encoding="utf-8") as f:
         last_lines = list(deque(f, maxlen=20))
         response = "".join(last_lines)
 
@@ -34,7 +34,7 @@ async def handle_logs(message: Message):
 
 @dp.message(Command("logs-self"))
 async def handle_self_logs(message: Message):
-    with open("./logs/info.log", "r", encoding="utf-8") as f:
+    with open("../logs/mail-service/info.log", "r", encoding="utf-8") as f:
         last_lines = list(deque(f, maxlen=20))
         response = "".join(last_lines)
 
