@@ -64,7 +64,7 @@ async def log_level_entered(message: Message, state: FSMContext):
     else:
         with open(file_path, "r", encoding="utf-8") as f:
             last_lines = list(deque(f, maxlen=20))
-            response = "".join(last_lines)
+            response = "\n".join(last_lines)
             await message.answer(
                 text=f"Последние логи из `{app_name}` уровня `{log_level}`:\n\n{response}"
             )
