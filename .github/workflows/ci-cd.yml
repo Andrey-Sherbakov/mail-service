@@ -26,6 +26,7 @@ jobs:
         run: uv run ruff format --check .
 
   deploy:
+    needs: ruff
     runs-on: ubuntu-latest
     environment: mail-service
 
