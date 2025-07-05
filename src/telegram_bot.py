@@ -23,7 +23,10 @@ dp = Dispatcher(storage=MemoryStorage())
 
 @dp.message(Command("start"))
 async def handle_start(message: Message):
-    await message.answer(text=f"Welcome to alarm bot!\nYour chat id is {message.chat.id}")
+    await message.answer(
+        text=f"Welcome to alarm bot!\nYour chat id is {message.chat.id}\n"
+        f"Available commands:\n/start\n/logs"
+    )
     logger.info(f"Start message handled: from={message.from_user.username}")
 
 
@@ -97,7 +100,7 @@ async def handle_message(message: Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is None:
         await message.answer(text="I dont want to talk with you ...")
-        logger.info(f"Message handled: message='{message.text}', from={message.from_user.username}")
+        logger.info("Available commands:\n/start\n/logs")
     else:
         logger.warning("Default message handler with active state!")
 
