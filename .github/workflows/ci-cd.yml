@@ -1,0 +1,48 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run Ruff linter
+        run: uv run ruff check .
+
+      - name: Run Ruff formatter
+        run: uv run ruff format .
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment: mail-service
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_ACTIONS_DEV_SERVER }}
+
+      - name: Deploy to server via SSH
+        run: |
+          ssh -o StrictHostKeyChecking=no root@94.228.126.175 "
+            cd mail-service &&
+            git pull &&
+            docker compose down &&
+            docker compose up --build -d
+          "

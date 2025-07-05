@@ -48,7 +48,7 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    environment = os.environ.get("ENVIRONMENT", "dev")
+    environment = os.environ.get("ENVIRONMENT", "local")
     env_file = f".{environment.lower()}.env"
     logger.debug(f"Using env file: {env_file}")
     return Settings(_env_file=env_file)
