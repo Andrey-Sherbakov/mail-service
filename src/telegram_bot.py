@@ -11,6 +11,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import Message
 from aiogram.filters import Command
+from aiohttp import ClientSession
 from fastapi import FastAPI
 
 from src.broker.producer import BrokerProducer
@@ -30,7 +31,7 @@ async def handle_start(message: Message):
     logger.info(f"Start message handled: from={message.from_user.username}")
 
 
-#### эксперимент
+#### логи
 class LogQuery(StatesGroup):
     waiting_for_app_name_and_level = State()
 
@@ -79,6 +80,77 @@ async def log_level_entered(message: Message, state: FSMContext):
 
 
 ######
+# -- #
+###### пинг
+class PingQuery(StatesGroup):
+    waiting_for_component_name = State()
+    component_map = {
+        "1": "all",
+        "2": "app",
+        "3": "database",
+        "4": "redis-cache",
+        "5": "redis-blacklist",
+        "6": "httpx-client",
+        "7": "broker",
+    }
+
+
+@dp.message(Command("ping"))
+async def handle_ping(message: Message, state: FSMContext):
+    response = "Выберите компонент для пингования (введите цифру):\n" + "\n".join(
+        f"{k}: {v}" for k, v in PingQuery.component_map.items()
+    )
+    await message.answer(response)
+    await state.set_state(PingQuery.waiting_for_component_name)
+
+
+@dp.message(PingQuery.waiting_for_component_name)
+async def component_entered(message: Message, state: FSMContext):
+    component = message.text.strip().lower()
+    if component not in PingQuery.component_map:
+        await message.answer("Неверные входные данные!")
+    elif component != "1":
+        async with ClientSession() as session:
+            result = await ping_component(
+                component_name=PingQuery.component_map[component], session=session
+            )
+            await message.answer(result)
+    else:
+        result = []
+        async with ClientSession() as session:
+            for name in PingQuery.component_map.values():
+                if name == "all":
+                    continue
+                result.append(await ping_component(component_name=name, session=session))
+        await message.answer("\n".join(result))
+
+    await state.clear()
+
+
+async def ping_component(component_name: str, session: ClientSession):
+    try:
+        async with session.get(f"http://localhost/api/ping/{component_name}") as response:
+            response.raise_for_status()
+            data = await response.json()
+            status = data.get("status")
+            detail = data.get("detail")
+
+            msg = f"{component_name}: "
+            if status == "ok":
+                msg += f"✅ {status}"
+            elif status == "error":
+                msg += f"❌ {status}"
+            else:
+                msg += "Not found"
+
+            if detail:
+                msg += f" ({detail})"
+
+            return msg
+
+    except Exception as e:
+        return f"Failed to ping {component_name}: {repr(e)}"
+#####
 
 
 @dp.message()
