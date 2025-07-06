@@ -26,7 +26,7 @@ dp = Dispatcher(storage=MemoryStorage())
 async def handle_start(message: Message):
     await message.answer(
         text=f"Welcome to alarm bot!\nYour chat id is\n - {message.chat.id}\n"
-        f"Available commands:\n - /start\n - /logs"
+        f"Available commands:\n - /start\n - /logs\n - /ping"
     )
     logger.info(f"Start message handled: from={message.from_user.username}")
 
@@ -122,7 +122,7 @@ async def component_entered(message: Message, state: FSMContext):
                 if name == "all":
                     continue
                 result.append(await ping_component(component_name=name, session=session))
-        await message.answer("\n".join(result))
+        await message.answer("\n\n".join(result))
 
     await state.clear()
 
@@ -159,7 +159,7 @@ async def ping_component(component_name: str, session: ClientSession):
 async def handle_message(message: Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is None:
-        await message.answer(text="Available commands:\n - /start\n - /logs")
+        await message.answer(text="Available commands:\n - /start\n - /logs\n - /ping")
         logger.info(f"Message handled: message='{message.text}', from={message.from_user.username}")
     else:
         logger.warning("Default message handler with active state!")
