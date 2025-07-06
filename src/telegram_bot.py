@@ -76,6 +76,8 @@ async def log_level_entered(message: Message, state: FSMContext):
             )
 
     await state.clear()
+
+
 ######
 
 
