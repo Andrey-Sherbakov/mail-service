@@ -69,32 +69,14 @@ async def log_level_entered(message: Message, state: FSMContext):
         await message.answer(f"Файл логов не найден по пути: {file_path}")
     else:
         with open(file_path, "r", encoding="utf-8") as f:
-            last_lines = list(deque(f, maxlen=20))
+            last_lines = list(deque(f, maxlen=10))
             response = "\n".join(last_lines)
             await message.answer(
                 text=f"Последние логи из `{app_name}` уровня `{log_level}`:\n\n{response}"
             )
 
     await state.clear()
-
-
 ######
-# @dp.message(Command("logs"))
-# async def handle_logs(message: Message):
-#     with open("../logs/pomodoro-time/info.log", "r", encoding="utf-8") as f:
-#         last_lines = list(deque(f, maxlen=20))
-#         response = "".join(last_lines)
-#
-#     await message.answer(text="Last logs from pomodoro-time:\n\n" + response)
-#
-#
-# @dp.message(Command("logs-self"))
-# async def handle_self_logs(message: Message):
-#     with open("../logs/mail-service/info.log", "r", encoding="utf-8") as f:
-#         last_lines = list(deque(f, maxlen=20))
-#         response = "".join(last_lines)
-#
-#     await message.answer(text="Last logs from mail-service:\n\n" + response)
 
 
 @dp.message()
