@@ -129,7 +129,7 @@ async def component_entered(message: Message, state: FSMContext):
 
 async def ping_component(component_name: str, session: ClientSession):
     try:
-        async with session.get(f"http://app/api/ping/{component_name}") as response:
+        async with session.get(f"http://app:8000/api/ping/{component_name}") as response:
             response.raise_for_status()
             data = await response.json()
             status = data.get("status")
