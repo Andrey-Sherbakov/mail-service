@@ -62,5 +62,3 @@ async def ping_component(component: COMPONENTS, session: ClientSession):
         logger.error(f"Failed to ping: component={component}, exception={repr(e)}")
 
         return f"Failed to ping {hbold(component)}: {html.escape(str(e), quote=False)}"
-
-
