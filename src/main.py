@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     await bot_startup(app=app)
     await consumer_startup(app=app)
 
-    # await app.state.bot.send_message("Mail-service app started")
+    await app.state.bot.send_message("Mail-service app started")
 
     yield
 
