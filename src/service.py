@@ -59,7 +59,7 @@ class MailService:
         )
 
 
-async def setup_mail_service(app: FastAPI):
+async def mail_service_startup(app: FastAPI):
     app.state.mail_service = MailService(
         settings=app.state.settings, broker_producer=app.state.broker_producer
     )

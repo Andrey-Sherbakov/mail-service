@@ -5,8 +5,8 @@ from fastapi import FastAPI
 from src.broker.consumer import consumer_startup, consumer_shutdown
 from src.broker.producer import producer_startup, producer_shutdown
 from src.config import get_settings
-from src.service import setup_mail_service
-from src.telegram_bot import TelegramBot, bot_startup, bot_shutdown
+from src.service import mail_service_startup
+from src.bot.main import TelegramBot, bot_startup, bot_shutdown
 
 
 @asynccontextmanager
@@ -14,11 +14,11 @@ async def lifespan(app: FastAPI):
     app.state.settings = get_settings()
 
     await producer_startup(app=app)
-    await setup_mail_service(app=app)
+    await mail_service_startup(app=app)
     await bot_startup(app=app)
     await consumer_startup(app=app)
 
-    await app.state.bot.send_message("Mail-service app started")
+    # await app.state.bot.send_message("Mail-service app started")
 
     yield
 

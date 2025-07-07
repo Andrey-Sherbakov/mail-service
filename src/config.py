@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     BOT_TOKEN: str
     BOT_NAME: str
     CHAT_ID: int
+    PING_URL: str
 
     # email settings
     MAIL_USERNAME: str

@@ -17,8 +17,8 @@ from src.logger import logger
 @dataclass
 class BrokerConsumer:
     settings: Settings
-    mail_handler: Callable[[AbstractIncomingMessage], Awaitable[None]] | None = None
-    tg_handler: Callable[[AbstractIncomingMessage], Awaitable[None]] | None = None
+    mail_handler: Callable[[AbstractIncomingMessage], Awaitable[None]]
+    tg_handler: Callable[[AbstractIncomingMessage], Awaitable[None]]
     _connection: AbstractRobustConnection | None = None
     _channel: AbstractRobustChannel | None = None
     _mail_queue: AbstractQueue | None = None
