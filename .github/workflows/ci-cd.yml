@@ -46,7 +46,5 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no root@94.228.126.175 "
             cd mail-service &&
-            git pull &&
-            docker compose down &&
-            docker compose up --build -d
+            make restart
           "
